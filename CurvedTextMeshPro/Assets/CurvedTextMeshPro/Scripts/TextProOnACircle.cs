@@ -65,43 +65,6 @@ namespace ntw.CurvedTextMeshPro
         private int m_maxDegreesPerLetter = 360;
 
         /// <summary>
-        /// Previous value of <see cref="m_radius"/>
-        /// </summary>
-        private float m_oldRadius = float.MaxValue;
-
-        /// <summary>
-        /// Previous value of <see cref="m_arcDegrees"/>
-        /// </summary>
-        private float m_oldArcDegrees = float.MaxValue;
-
-        /// <summary>
-        /// Previous value of <see cref="m_angularOffset"/>
-        /// </summary>
-        private float m_oldAngularOffset = float.MaxValue;
-
-        /// <summary>
-        /// Previous value of <see cref="m_maxDegreesPerLetter"/>
-        /// </summary>
-        private float m_oldMaxDegreesPerLetter = float.MaxValue;
-
-        /// <summary>
-        /// Method executed at every frame that checks if some parameters have been changed
-        /// </summary>
-        /// <returns></returns>
-        protected override bool ParametersHaveChanged()
-        {
-            //check if paramters have changed and update the old values for next frame iteration
-            bool retVal = m_radius != m_oldRadius || m_arcDegrees != m_oldArcDegrees || m_angularOffset != m_oldAngularOffset || m_oldMaxDegreesPerLetter != m_maxDegreesPerLetter;
-
-            m_oldRadius = m_radius;
-            m_oldArcDegrees = m_arcDegrees;
-            m_oldAngularOffset = m_angularOffset;
-            m_oldMaxDegreesPerLetter = m_maxDegreesPerLetter;
-
-            return retVal;
-        }
-
-        /// <summary>
         /// Computes the transformation matrix that maps the offsets of the vertices of each single character from
         /// the character's center to the final destinations of the vertices so that the text follows a curve
         /// </summary>
@@ -124,7 +87,10 @@ namespace ntw.CurvedTextMeshPro
             //Notice that we have to do some extra calculations because we have to take in count that text may be on multiple lines
             float x0 = Mathf.Cos(angle);            
             float y0 = Mathf.Sin(angle);
-            float radiusForThisLine = m_radius - textInfo.lineInfo[0].lineExtents.max.y * textInfo.characterInfo[charIdx].lineNumber;
+
+            var e = m_RectTransform.rect.width / 2;
+            var radius = e * m_radius;
+            float radiusForThisLine = radius - textInfo.lineInfo[0].lineExtents.max.y * textInfo.characterInfo[charIdx].lineNumber;
             Vector2 newMideBaselinePos = new Vector2(x0 * radiusForThisLine, -y0 * radiusForThisLine); //actual new position of the character
 
             //compute the trasformation matrix: move the points to the just found position, then rotate the character to fit the angle of the curve 

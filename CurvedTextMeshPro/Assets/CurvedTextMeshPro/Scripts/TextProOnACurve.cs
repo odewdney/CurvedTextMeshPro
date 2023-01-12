@@ -33,24 +33,44 @@ namespace ntw.CurvedTextMeshPro
     /// Base class for drawing a Text Pro text following a particular curve
     /// </summary>
     [ExecuteInEditMode]
+    [DisallowMultipleComponent]
+    [RequireComponent(typeof(TMP_Text))]
     public abstract class TextProOnACurve : MonoBehaviour
     {
         /// <summary>
         /// The text component of interest
         /// </summary>
-        private TMP_Text m_TextComponent;
+        protected TMP_Text m_TextComponent;
 
-        /// <summary>
-        /// True if the text must be updated at this frame 
-        /// </summary>
-        private bool m_forceUpdate;
+        private RectTransform _m_RectTransform;
+
+        protected RectTransform m_RectTransform
+        {
+            get { if (_m_RectTransform == null) _m_RectTransform = GetComponent<RectTransform>(); return _m_RectTransform; }
+        }
 
         /// <summary>
         /// Awake
         /// </summary>
         private void Awake()
         {
-            m_TextComponent = gameObject.GetComponent<TMP_Text>();
+            //m_RectTransform = GetComponent<RectTransform>();
+            m_TextComponent = GetComponent<TMP_Text>();
+        }
+
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            if (m_TextComponent != null)
+                m_TextComponent.ForceMeshUpdate();
+        }
+#endif
+
+        private void OnTextPreRender(TMP_TextInfo info)
+        {
+            Debug.Log("OnPrerender");
+            m_TextComponent.UpdateVertexData();
+            UpdateText();
         }
 
         /// <summary>
@@ -59,21 +79,28 @@ namespace ntw.CurvedTextMeshPro
         private void OnEnable()
         {
             //every time the object gets enabled, we have to force a re-creation of the text mesh
-            m_forceUpdate = true;
+            if (m_TextComponent != null)
+            {
+                m_TextComponent.OnPreRenderText += OnTextPreRender;
+            }
         }
+
+        private void OnDisable()
+        {
+            if (m_TextComponent != null)
+            {
+                m_TextComponent.OnPreRenderText -= OnTextPreRender;
+            }
+        }
+
 
         /// <summary>
         /// Update
         /// </summary>
-        protected void Update()
+        protected void UpdateText()
         {
-            //if the text and the parameters are the same of the old frame, don't waste time in re-computing everything
-            if (!m_forceUpdate && !m_TextComponent.havePropertiesChanged && !ParametersHaveChanged())
-            {
+            if (m_TextComponent == null)
                 return;
-            }
-
-            m_forceUpdate = false;
 
             //during the loop, vertices represents the 4 vertices of a single character we're analyzing, 
             //while matrix is the roto-translation matrix that will rotate and scale the characters so that they will
@@ -82,7 +109,7 @@ namespace ntw.CurvedTextMeshPro
             Matrix4x4 matrix;
 
             //Generate the mesh and get information about the text and the characters
-            m_TextComponent.ForceMeshUpdate();
+//            m_TextComponent.ForceMeshUpdate();
 
             TMP_TextInfo textInfo = m_TextComponent.textInfo;
             int characterCount = textInfo.characterCount;
@@ -135,14 +162,9 @@ namespace ntw.CurvedTextMeshPro
             }
 
             //Upload the mesh with the revised information
-            m_TextComponent.UpdateVertexData();
+            //m_TextComponent.UpdateVertexData();
         }
 
-        /// <summary>
-        /// Method executed at every frame that checks if some parameters have been changed
-        /// </summary>
-        /// <returns></returns>
-        protected abstract bool ParametersHaveChanged();
 
         /// <summary>
         /// Computes the transformation matrix that maps the offsets of the vertices of each single character from

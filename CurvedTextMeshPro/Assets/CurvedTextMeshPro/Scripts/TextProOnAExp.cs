@@ -40,25 +40,6 @@ namespace ntw.CurvedTextMeshPro
         private float m_expBase = 1.3f;
 
         /// <summary>
-        /// Previous value of <see cref="m_expBase"/>
-        /// </summary>
-        private float m_oldExpBase = float.MaxValue;
-    
-        /// <summary>
-        /// Method executed at every frame that checks if some parameters have been changed
-        /// </summary>
-        /// <returns></returns>
-        protected override bool ParametersHaveChanged()
-        {
-            //check if paramters have changed and update the old values for next frame iteration
-            bool retVal = m_expBase != m_oldExpBase;
-
-            m_oldExpBase = m_expBase;
-           
-            return retVal;
-        }
-
-        /// <summary>
         /// Computes the transformation matrix that maps the offsets of the vertices of each single character from
         /// the character's center to the final destinations of the vertices so that the text follows a curve
         /// </summary>
